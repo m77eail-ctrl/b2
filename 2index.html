@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة التقنية والأناقة | بوابتك إلى الاحتراف الرقمي</title>
+    <!-- Tajawal Font & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CodeMirror CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --bg-card: #121927;
+            --bg-editor: #1a2332;
+            --accent-cyan: #00f3ff;
+            --accent-amber: #ffb703;
+            --accent-green: #00f5d4;
+            --accent-red: #ff0055;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border-color: #233044;
+            --font-arabic: 'Tajawal', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-arabic);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(18, 25, 39, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+
+        .logo i {
+            color: var(--accent-cyan);
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 8px var(--accent-cyan));
+        }
+
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-arabic);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+        }
+
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* IDE Layout */
+        .ide-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 140px);
+        }
+
+        @media (max-width: 1024px) {
+            .ide-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .ide-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #0d131f;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--bg-editor);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-arabic);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .btn-primary {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #00c4d0;
+            color: var(--bg-dark);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            border: none;
+        }
+
+        .btn-danger {
+            background: rgba(255, 0, 85, 0.1);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .file-tabs {
+            display: flex;
+            background: #090d14;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .file-tab {
+            padding: 8px 16px;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-left: 1px solid var(--border-color);
+            background: transparent;
+            border-top: none;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .file-tab.active {
+            background: var(--bg-editor);
+            color: var(--accent-cyan);
+            border-top: 2px solid var(--accent-cyan);
+        }
+
+        .code-editors-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: var(--font-code) !important;
+            font-size: 14px;
+        }
+
+        .editor-instance {
+            display: none;
+            height: 100%;
+        }
+
+        .editor-instance.active {
+            display: block;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #ffffff;
+        }
+
+        /* Exercise Sidebar inside IDE */
+        .exercise-info {
+            padding: 15px;
+            background: rgba(0, 243, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .exercise-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 6px;
+        }
+
+        .hints-box {
+            background: rgba(255, 183, 3, 0.08);
+            border: 1px dashed var(--accent-amber);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.88rem;
+        }
+
+        .test-cases {
+            padding: 12px;
+            background: #090d14;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .test-item.pass {
+            color: var(--accent-green);
+        }
+
+        .test-item.fail {
+            color: var(--accent-red);
+        }
+
+        /* Prompt Engineering Studio */
+        .prompt-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .prompt-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .form-control, select, textarea {
+            width: 100%;
+            background: var(--bg-editor);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-family: var(--font-arabic);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus, select:focus, textarea:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .prompt-output-box {
+            background: #090d14;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: var(--font-code);
+            font-size: 0.95rem;
+            color: var(--accent-green);
+            min-height: 120px;
+            word-break: break-all;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .templates-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chip {
+            background: var(--bg-editor);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip:hover {
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .alert-box {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .alert-danger {
+            background: rgba(255, 0, 85, 0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .guides-section {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .guide-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .guide-card h4 {
+            color: var(--accent-amber);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-code"></i>
+            <span>منصة التقنية والأناقة</span>
+        </div>
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('ide-tab', this)">
+                <i class="fa-solid fa-laptop-code"></i> لوحة المحرر والتمارين
+            </button>
+            <button class="nav-btn" onclick="switchTab('prompt-tab', this)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> مولد أوامر الصور AI
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- IDE & Exercise Section -->
+        <div id="ide-tab" class="tab-content active">
+            <div class="ide-container">
+                <!-- Left: Code Editors -->
+                <div class="ide-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-terminal"></i> محرر الكود الحي
+                        </div>
+                        <div class="controls-bar">
+                            <button class="btn btn-primary" onclick="runCode()"><i class="fa-solid fa-play"></i> تشغيل</button>
+                            <button class="btn btn-success" onclick="evaluateExercise()"><i class="fa-solid fa-circle-check"></i> فحص الحل</button>
+                            <button class="btn" onclick="saveProgress()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+                            <button class="btn" onclick="loadSample()"><i class="fa-solid fa-file-import"></i> نموذج جاهز</button>
+                            <button class="btn btn-danger" onclick="resetCode()"><i class="fa-solid fa-rotate-left"></i> إعادة تعيين</button>
+                        </div>
+                    </div>
+
+                    <div class="file-tabs">
+                        <button class="file-tab active" onclick="switchEditor('html', this)">index.html</button>
+                        <button class="file-tab" onclick="switchEditor('css', this)">style.css</button>
+                        <button class="file-tab" onclick="switchEditor('js', this)">script.js</button>
+                    </div>
+
+                    <div class="code-editors-wrapper">
+                        <div id="html-editor-container" class="editor-instance active">
+                            <textarea id="html-code"></textarea>
+                        </div>
+                        <div id="css-editor-container" class="editor-instance">
+                            <textarea id="css-code"></textarea>
+                        </div>
+                        <div id="js-editor-container" class="editor-instance">
+                            <textarea id="js-code"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Automated Test Status Panel -->
+                    <div class="test-cases">
+                        <div style="font-weight:700; margin-bottom:6px; color:var(--accent-cyan)">نتائج التحقق التلقائي:</div>
+                        <div class="test-item" id="test-1"><i class="fa-regular fa-circle"></i> عنوان رئيسي h1 يحوي اسمك الشخصي أو لقبك.</div>
+                        <div class="test-item" id="test-2"><i class="fa-regular fa-circle"></i> فقرة p تحتوي على وصف مختصر لمجالك.</div>
+                        <div class="test-item" id="test-3"><i class="fa-regular fa-circle"></i> تنسيق CSS يتضمن خلفية داكنة ولون خط مميز.</div>
+                        <div class="test-item" id="test-4"><i class="fa-regular fa-circle"></i> كود JavaScript يتضمن زر تفاعلي ينفذ إشعار alert أو تغيير لون.</div>
+                    </div>
+                </div>
+
+                <!-- Right: Preview & Exercise Instructions -->
+                <div class="ide-panel">
+                    <div class="exercise-info">
+                        <div class="exercise-title"><i class="fa-solid fa-bullseye"></i> تمرين اليوم: بناء بطاقة شخصية تفاعلية</div>
+                        <p style="font-size:0.9rem; color:var(--text-muted)">
+                            قم بتعديل الكود في المحرر الأيمن لإنشاء صفحتك الشخصية. اتبع التعليمات والتلميحات لإتمام التحدي واختبار النتائج بشكل آمن.
+                        </p>
+                        <div class="hints-box">
+                            <strong><i class="fa-solid fa-lightbulb"></i> تلميح خطوة بخطوة:</strong>
+                            <ol style="margin-right:20px; margin-top:4px;">
+                                <li>في تبويب HTML، أضف عنصر <code>&lt;h1&gt;</code> و <code>&lt;button id="btn"&gt;</code>.</li>
+                                <li>في تبويب CSS، غير خلفية الصفحة باستخدام <code>background-color: #0d1117;</code>.</li>
+                                <li>في تبويب JS، أضف حدث عند النقر على الزر <code>addEventListener('click', ...)</code>.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="panel-header" style="background:#090d14;">
+                        <div class="panel-title" style="color:var(--text-main);">
+                            <i class="fa-solid fa-desktop"></i> المعاينة الفورية (Sandbox Frame)
+                        </div>
+                    </div>
+
+                    <div style="flex:1; position:relative;">
+                        <iframe id="preview-frame" class="preview-frame" sandbox="allow-scripts"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Prompt Generator Section -->
+        <div id="prompt-tab" class="tab-content">
+            <div class="prompt-grid">
+                <!-- Generator Controls -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-sliders"></i> مولد ومصمم أوامر الصور (AI Prompt Studio)
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">الموضوع / الفكرة الأساسية (Subject)</label>
+                        <input type="text" id="prompt-subject" class="form-control" placeholder="مثال: رائد فضاء عربي يقف على سطح المريخ">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">نموذج الذكاء الاصطناعي</label>
+                            <select id="prompt-model" class="form-control" onchange="generatePrompt()">
+                                <option value="Midjourney v6">Midjourney v6</option>
+                                <option value="DALL-E 3">DALL-E 3</option>
+                                <option value="Stable Diffusion XL">Stable Diffusion XL</option>
+                                <option value="Flux.1 Cyber">Flux.1</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">النمط الفني (Style)</label>
+                            <select id="prompt-style" class="form-control" onchange="generatePrompt()">
+                                <option value="Cyberpunk Luxury, Glowing Neon">سقائف النيون (Cyberpunk Luxury)</option>
+                                <option value="Hyper-realistic Photographic 8K">تصوير واقعي 8K</option>
+                                <option value="Minimalist Tech Corporate">تبسيطي رقمي (Tech Minimalist)</option>
+                                <option value="Digital Oil Painting, Cinematic">لوحة زيتية رقمية سينمائية</option>
+                                <option value="3D Render, Unreal Engine 5">مجسم ثلاثي الأبعاد 3D</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">أبعاد الصورة (Aspect Ratio)</label>
+                            <select id="prompt-ar" class="form-control" onchange="generatePrompt()">
+                                <option value="--ar 16:9">16:9 (عريض / شاشات)</option>
+                                <option value="--ar 1:1">1:1 (مربع / انستغرام)</option>
+                                <option value="--ar 9:16">9:16 (طولي / ستوري)</option>
+                                <option value="--ar 4:3">4:3 (شاشة كلاسيكية)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">قيمة العشوائية (Seed)</label>
+                            <input type="number" id="prompt-seed" class="form-control" placeholder="مثال: 42891" oninput="generatePrompt()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">العناصر المستبعدة / النفي (Negative Prompt)</label>
+                        <input type="text" id="prompt-negative" class="form-control" placeholder="مثال: blur, low quality, distorted hands, text" oninput="generatePrompt()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">قوالب جاهزة سريعة</label>
+                        <div class="templates-list">
+                            <span class="chip" onclick="applyTemplate('لوحة قيادة سيارة رياضية مستقبلية بطابع نيون فيروزي وبرتقالي')">لوحة سيارة نيون</span>
+                            <span class="chip" onclick="applyTemplate('مكتب برمجة عصري مع شاشات متعددة يطل على مدينة ناطحات سحاب في الليل')">مكتب برمجة ليلي</span>
+                            <span class="chip" onclick="applyTemplate('شعار احترافي بسيط لشركة تقنية ذات طابع سايبربانك')">شعار تقني احترافي</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output & Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-code"></i> النص النهائي للطلب (Prompt Output)
+                    </div>
+
+                    <div class="prompt-output-box" id="prompt-output">
+                        جاري صياغة الأمر...
+                    </div>
+
+                    <div id="safety-alert" class="alert-box alert-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i> تم اكتشاف كلمات محظورة أو غير ملائمة، يرجى مراجعة النص وتعديله.
+                    </div>
+
+                    <div class="controls-bar" style="margin-top:1.5rem;">
+                        <button class="btn btn-primary" onclick="copyPrompt()"><i class="fa-solid fa-copy"></i> نسخ الأمر</button>
+                        <button class="btn" onclick="downloadPrompt('txt')"><i class="fa-solid fa-download"></i> تصدير TXT</button>
+                        <button class="btn" onclick="downloadPrompt('json')"><i class="fa-solid fa-file-code"></i> تصدير JSON</button>
+                        <button class="btn" onclick="sharePrompt()"><i class="fa-solid fa-share-nodes"></i> مشاركة</button>
+                    </div>
+
+                    <!-- Quick visual hint frame -->
+                    <div style="margin-top:2rem; background:#090d14; border:1px dashed var(--border-color); border-radius:8px; padding:1rem; text-align:center;">
+                        <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">معاينة هيكلية للمشهد المولد:</div>
+                        <div id="visual-preview" style="height:100px; background:linear-gradient(135deg, #0a0e17 0%, #1a2332 100%); border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--accent-cyan); font-weight:700;">
+                            [معاينة ألوان ونمط المشهد]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beginner Guides Section -->
+            <div class="guides-section">
+                <div class="guide-card">
+                    <h4><i class="fa-solid fa-book-open"></i> قاعدة صياغة الأوامر 1: الهيكل الرئيسي</h4>
+                    <p style="font-size:0.9rem; color:var(--text-muted);">
+                        ابدأ دائماً بـ <strong>الموضوع (Subject)</strong> ثم <strong>البيئة والفيزيائيات (Environment/Lighting)</strong> ثم <strong>النمط الفني (Style)</strong> وأخيراً <strong>المعلمات التكنيكية (Parameters)</strong>.
+                    </p>
+                </div>
+                <div class="guide-card">
+                    <h4><i class="fa-solid fa-wand-magic"></i> قاعدة صياغة الأوامر 2: استخدام النفي</h4>
+                    <p style="font-size:0.9rem; color:var(--text-muted);">
+                        استخدم حقل <code>--no</code> لتجنب الأخطاء الشائعة في التشوه البصري مثل الأيد المشوهة أو الضبابية.
+                    </p>
+                </div>
+                <div class="guide-card">
+                    <h4><i class="fa-solid fa-shield-halved"></i> قاعدة صياغة الأوامر 3: حماية المحتوى</h4>
+                    <p style="font-size:0.9rem; color:var(--text-muted);">
+                        تأكد دائماً من خلو الأوامر من المفردات الحساسة أو المحظورة لضمان قبول الطلب في منصات AI العامة.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        منصة التقنية والأناقة &copy; 2026 | تم التطوير للاحتراف الرقمي والعمل المباشر على GitHub Pages
+    </footer>
+
+    <script>
+        // Global Editor Handles
+        let htmlEditor, cssEditor, jsEditor;
+        const forbiddenWords = ['violence', 'hate', 'illegal', 'explicit', 'اباحي', 'عنف'];
+
+        // Sample initial code
+        const initialHTML = `<div class="card">\n  <h1>مرحباً بك، أنا مصمم رقمي</h1>\n  <p>أصمم منصات الويب وتجارب المستخدم العصرية بطابع حديث.</p>\n  <button id="action-btn">تفاعل معي</button>\n</div>`;
+        const initialCSS = `body {\n  background-color: #0d131f;\n  color: #f0f6fc;\n  font-family: sans-serif;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  height: 100vh;\n  margin: 0;\n}\n.card {\n  background: #161f2e;\n  padding: 2rem;\n  border-radius: 12px;\n  border: 1px solid #00f3ff;\n  text-align: center;\n}\nh1 { color: #00f3ff; }\nbutton {\n  background: #ffb703;\n  border: none;\n  padding: 10px 20px;\n  font-weight: bold;\n  border-radius: 6px;\n  cursor: pointer;\n}`;
+        const initialJS = `document.getElementById('action-btn').addEventListener('click', () => {\n  alert('مرحباً بك في منصة التقنية والأناقة!');\n});`;
+
+        window.onload = function() {
+            // Initialize CodeMirror Editors
+            htmlEditor = CodeMirror.fromTextArea(document.getElementById('html-code'), {
+                mode: 'htmlmixed',
+                theme: 'dracula',
+                lineNumbers: true,
+                direction: 'ltr'
+            });
+
+            cssEditor = CodeMirror.fromTextArea(document.getElementById('css-code'), {
+                mode: 'css',
+                theme: 'dracula',
+                lineNumbers: true,
+                direction: 'ltr'
+            });
+
+            jsEditor = CodeMirror.fromTextArea(document.getElementById('js-code'), {
+                mode: 'javascript',
+                theme: 'dracula',
+                lineNumbers: true,
+                direction: 'ltr'
+            });
+
+            // Set initial content or load saved
+            if (localStorage.getItem('tech_elegance_saved') === 'true') {
+                htmlEditor.setValue(localStorage.getItem('tech_html') || initialHTML);
+                cssEditor.setValue(localStorage.getItem('tech_css') || initialCSS);
+                jsEditor.setValue(localStorage.getItem('tech_js') || initialJS);
+            } else {
+                htmlEditor.setValue(initialHTML);
+                cssEditor.setValue(initialCSS);
+                jsEditor.setValue(initialJS);
+            }
+
+            // Run initial preview
+            runCode();
+            generatePrompt();
+        };
+
+        // Navigation Tabs Switcher
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+
+            if(tabId === 'ide-tab') {
+                setTimeout(() => {
+                    htmlEditor.refresh();
+                    cssEditor.refresh();
+                    jsEditor.refresh();
+                }, 100);
+            }
+        }
+
+        // Editor Code Switcher
+        function switchEditor(type, tabBtn) {
+            document.querySelectorAll('.file-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.editor-instance').forEach(e => e.classList.remove('active'));
+
+            tabBtn.classList.add('active');
+            document.getElementById(`${type}-editor-container`).classList.add('active');
+
+            if (type === 'html') htmlEditor.refresh();
+            if (type === 'css') cssEditor.refresh();
+            if (type === 'js') jsEditor.refresh();
+        }
+
+        // Live Execution in Sandbox Frame
+        function runCode() {
+            const html = htmlEditor.getValue();
+            const css = cssEditor.getValue();
+            const js = jsEditor.getValue();
+
+            const iframe = document.getElementById('preview-frame');
+            
+            const fullContent = `
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: https:;">
+                    <style>${css}</style>
+                </head>
+                <body>
+                    ${html}
+                    <script>${js}<\/script>
+                </body>
+                </html>
+            `;
+
+            iframe.srcdoc = fullContent;
+            evaluateExercise();
+        }
+
+        // Automated Test Verification Logic
+        function evaluateExercise() {
+            const html = htmlEditor.getValue();
+            const css = cssEditor.getValue();
+            const js = jsEditor.getValue();
+
+            // Test 1: H1 exists
+            updateTestStatus('test-1', /<h1[^>]*>[\s\S]*?<\/h1>/i.test(html));
+            // Test 2: P exists
+            updateTestStatus('test-2', /<p[^>]*>[\s\S]*?<\/p>/i.test(html));
+            // Test 3: CSS styling
+            updateTestStatus('test-3', css.includes('background') || css.includes('color'));
+            // Test 4: JS Interaction
+            updateTestStatus('test-4', js.includes('addEventListener') || js.includes('alert') || js.includes('onclick'));
+        }
+
+        function updateTestStatus(id, passed) {
+            const el = document.getElementById(id);
+            if (passed) {
+                el.className = 'test-item pass';
+                el.querySelector('i').className = 'fa-solid fa-circle-check';
+            } else {
+                el.className = 'test-item fail';
+                el.querySelector('i').className = 'fa-solid fa-circle-xmark';
+            }
+        }
+
+        // Save progress to LocalStorage
+        function saveProgress() {
+            localStorage.setItem('tech_html', htmlEditor.getValue());
+            localStorage.setItem('tech_css', cssEditor.getValue());
+            localStorage.setItem('tech_js', jsEditor.getValue());
+            localStorage.setItem('tech_elegance_saved', 'true');
+            alert('تم حفظ كود التمارين بنجاح في متصفحك!');
+        }
+
+        // Load Sample Code
+        function loadSample() {
+            htmlEditor.setValue(initialHTML);
+            cssEditor.setValue(initialCSS);
+            jsEditor.setValue(initialJS);
+            runCode();
+        }
+
+        // Reset Code
+        function resetCode() {
+            if(confirm('هل انت أحدث رغبتك في إعادة تعيين الكود ومسح التعديلات؟')) {
+                htmlEditor.setValue('');
+                cssEditor.setValue('');
+                jsEditor.setValue('');
+                runCode();
+            }
+        }
+
+        // AI Prompt Studio Functions
+        function generatePrompt() {
+            const subject = document.getElementById('prompt-subject').value.trim() || 'شاشة العرض الرقمية المستقبلية';
+            const model = document.getElementById('prompt-model').value;
+            const style = document.getElementById('prompt-style').value;
+            const ar = document.getElementById('prompt-ar').value;
+            const seed = document.getElementById('prompt-seed').value;
+            const negative = document.getElementById('prompt-negative').value;
+
+            // Safety Check
+            const combinedText = (subject + ' ' + negative).toLowerCase();
+            const hasViolation = forbiddenWords.some(word => combinedText.includes(word));
+            const alertBox = document.getElementById('safety-alert');
+
+            if (hasViolation) {
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.style.display = 'none';
+            }
+
+            let fullPrompt = `${subject}, ${style}, volumetric lighting, ultra-detailed --model ${model} ${ar}`;
+            if (seed) fullPrompt += ` --seed ${seed}`;
+            if (negative) fullPrompt += ` --no ${negative}`;
+
+            document.getElementById('prompt-output').innerText = fullPrompt;
+
+            // Update Visual Dynamic Preview Color Box
+            const visual = document.getElementById('visual-preview');
+            if(style.includes('Cyberpunk')) {
+                visual.style.background = 'linear-gradient(135deg, #00f3ff 0%, #ff0055 100%)';
+                visual.style.color = '#fff';
+            } else if(style.includes('Minimalist')) {
+                visual.style.background = 'linear-gradient(135deg, #121927 0%, #233044 100%)';
+                visual.style.color = '#00f3ff';
+            } else {
+                visual.style.background = 'linear-gradient(135deg, #ffb703 0%, #00f5d4 100%)';
+                visual.style.color = '#000';
+            }
+        }
+
+        function applyTemplate(text) {
+            document.getElementById('prompt-subject').value = text;
+            generatePrompt();
+        }
+
+        function copyPrompt() {
+            const text = document.getElementById('prompt-output').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('تم نسخ أمر الصورة بنجاح إلى المحفظة!');
+            });
+        }
+
+        function downloadPrompt(format) {
+            const text = document.getElementById('prompt-output').innerText;
+            let filename = `ai-prompt.${format}`;
+            let mimeType = 'text/plain';
+            let content = text;
+
+            if (format === 'json') {
+                mimeType = 'application/json';
+                content = JSON.stringify({
+                    subject: document.getElementById('prompt-subject').value,
+                    model: document.getElementById('prompt-model').value,
+                    style: document.getElementById('prompt-style').value,
+                    fullPrompt: text,
+                    timestamp: new Date().toISOString()
+                }, null, 2);
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+
+        function sharePrompt() {
+            const text = document.getElementById('prompt-output').innerText;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'أمر صورة من منصة التقنية والأناقة',
+                    text: text
+                });
+            } else {
+                copyPrompt();
+            }
+        }
+    </script>
+</body>
+</html>
